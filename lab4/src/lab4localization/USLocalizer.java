@@ -6,6 +6,9 @@ public class USLocalizer {
 	public enum LocalizationType { FALLING_EDGE, RISING_EDGE };
 	public static int ROTATION_SPEED = 30;
 	public static int US_MAX = 255;
+	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 225;
+	//parameters for correcting the angle the heading turns to, to account for wraparound when robot is turning
+	//must find better values for these through testing
 
 	private Odometer odo;
 	private SampleProvider usSensor;
@@ -50,7 +53,7 @@ public class USLocalizer {
 		}
 		angleB = odo.getTheta();
 	
-		turnToZero(angleA, angleB);
+		turnActualZero(angleA, angleB);
 
 		odo.reset(); //TODO: write this method
 	}
@@ -76,15 +79,24 @@ public class USLocalizer {
 		}
 		angleA = odo.getTheta();
 	
-		turnToZero(angleA, angleB);
+		turnActualZero(angleA, angleB);
 	
 		odo.reset();
 	}
 	
-	//turns towards zero (average point between the two input angles) 
-	//TODO: figure out how to implement this method correctly for this odometer
-	private void turnToZero(double angleA, double angleB){
-		nav.turnTo(angleB + (angleA - angleB) / 2, true);
+	//turns to the heading account for the heading correction angle
+	private void turnActualZero(double angleA, double angleB){ 
+		if(angleA <= angleB){
+			setHeadingRealZero(angleA, angleB, ANGLE_CORR_LOW);
+		}
+		else if(angleA >= angleB) {
+			setHeadingRealZero(angleA, angleB, ANGLE_CORR_HI);
+		}
+	}
+	
+	// set heading to calculated zero (average point between the two input angles) 
+	private void setHeadingRealZero(double angleA, double angleB, double angleCorrection){
+		nav.turnTo(angleCorrection - (angleA + angleB) / 2, true);
 	}
 	
 	//TODO: still need to implement a way to deal with noise in US readings
