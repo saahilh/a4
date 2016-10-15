@@ -32,8 +32,10 @@ public class USLocalizer {
 	
 	/*  
 	 * TODO: test fallingEdge() and risingEdge() in random starting orientations 
-	 * in the starting square and record data. determine which is better (lower 
-	 * standard deviation) and use that for the rest of the lab
+	 * in the starting square (but on the 45 degrees line going from one corner
+	 * of it to the required (0,0) that must be found) and record data. determine 
+	 * which of the two US methods is better (i.e., lower standard deviation) and 
+	 * use that for the rest of the lab
 	 */
 	
 	public void doLocalization() {
@@ -44,7 +46,8 @@ public class USLocalizer {
 			risingEdge();
 		}
 		
-		/* TODO: make robot move forward to true (0,0), then reset
+		/* 
+		 * TODO: make robot move forward to true (0,0), then reset
 		 * the odometer (unless this is to be done in LightLocalizer)
 		 */
 	}

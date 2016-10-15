@@ -9,16 +9,43 @@ import lejos.robotics.SampleProvider;
 
 public class Lab4 {
 
-	// Static Resources:
-	// Left motor connected to output A
-	// Right motor connected to output D
-	// Ultrasonic sensor port connected to input S1
-	// Color sensor port connected to input S2
+	/* 
+	 * Static Resources:
+	 * Left motor connected to output A
+	 * Right motor connected to output D
+	 * Ultrasonic sensor port connected to input S1
+	 * Color sensor port connected to input S2
+	 */
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 	private static final Port usPort = LocalEV3.get().getPort("S1");		
 	private static final Port colorPort = LocalEV3.get().getPort("S2");		
 
+	/* 
+	 * TODO for lab:
+	 * PART 1
+	 * 	TASK
+	 * 		1. localize and determine position
+	 * 		2. turn robot towards its "0°" heading relative to (0, 0)
+	 * 			NOTE: robot should not have moved other than rotating in this first part.
+	 * 				  the robot must stop after turning to 0° so the TA can measure
+	 * 		 	  	  the error of its angle. use "Button.waitForAnyPress();" for this
+	 *	GRADING
+	 *	[10 / 30] points are given for orienting the robot on its 0° axis within an error 
+	 *			  tolerance of ±10°. A penalty of -2 points per ±5° is imposed after the 
+	 *		      initial ±10°.
+	 *
+	 * PART 2
+	 * 		3. turn robot back to (0, 0) and move to it
+	 * 		4. turn to your robot's 0° heading again
+	 * GRADING 
+	 * 	[10 / 30] points are given for reaching point (0, 0) within an error tolerance
+	 * 			  of 1cm using Euclidean distance. A penalty of -1 point per cm is
+	 * 			  imposed after this initial 1cm
+	 * 	[10 / 30] points are given for orienting the robot along its 0° axis at point 
+	 * 			  (0, 0) within an error tolerance of ±10°. A penalty of -2 points per 
+	 * 			  ±5° is imposed after the initial ±10°. 
+	 */
 	
 	public static void main(String[] args) {
 		
@@ -58,7 +85,7 @@ public class Lab4 {
 		
 		// perform the light sensor localization
 		LightLocalizer lsl = new LightLocalizer(odo, colorValue, colorData);
-		lsl.doLocalization();			
+		lsl.doLocalization();	
 		
 		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
 		System.exit(0);	
