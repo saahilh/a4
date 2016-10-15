@@ -84,7 +84,7 @@ public class Navigation {
 	}
 
 	/*
-	 * TravelTo function which takes as arguments the x and y position in cm Will travel to designated position, while
+	 * travelTo function which takes as arguments the x and y position in cm Will travel to designated position, while
 	 * constantly updating it's heading
 	 */
 	public void travelTo(double x, double y) {
@@ -100,7 +100,7 @@ public class Navigation {
 	}
 
 	/*
-	 * TurnTo function which takes an angle and boolean as arguments The boolean controls whether or not to stop the
+	 * turnTo function which takes an angle and boolean as arguments The boolean controls whether or not to stop the
 	 * motors when the turn is completed
 	 */
 	public void turnTo(double angle, boolean stop) {

@@ -5,10 +5,16 @@ import lejos.robotics.SampleProvider;
 public class USLocalizer {
 	public enum LocalizationType { FALLING_EDGE, RISING_EDGE };
 	public static int ROTATION_SPEED = 30;
+	
+	/**
+	 * @param {int} US_MAX - max reading of ultrasonic sensor; used to assume no object is in front of the robot
+	 * @param {double} ANGLE_CORR_LOW, ANGLE_CORR_HI - parameters for correcting robot rotation wrap-around
+	 */
+	
+	//TODO: test ANGLE_CORR_LOW, ANGLE_CORR_HI, change if required; also modify US_MAX if needed
+		
 	public static int US_MAX = 255;
 	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 225;
-	//parameters for correcting the angle the heading turns to, to account for wraparound when robot is turning
-	//must find better values for these through testing
 
 	private Odometer odo;
 	private SampleProvider usSensor;
@@ -32,9 +38,12 @@ public class USLocalizer {
 		}
 	}
 	
-	/* fallingEdge(): to be called when starting with US facing away from a wall
+	/* 
+	 * fallingEdge(): to be called when starting with US facing away from a wall
 	 * rotates till wall is found, sets this as angleA, reverses direction till
-	 * wall is found, sets this as angleB */
+	 * wall is found, sets this as angleB. finally, turns to the calculated "actual" 
+	 * (0, 0) point and sets this as the odometer start 
+	 */
 	
 	private void fallingEdge(){ 
 		double angleA, angleB;
@@ -58,9 +67,12 @@ public class USLocalizer {
 		odo.reset(); //TODO: write this method
 	}
 	
-	/* risingEdge(): to be called when starting with US facing towards a wall
+	/* 
+	 * risingEdge(): to be called when starting with US facing towards a wall
 	 * rotates till end of wall is found, sets this as angleB, reverses direction 
-	 * till other end of wall is found, sets this as angleA */
+	 * till other end of wall is found, sets this as angleA. finally, turns to
+	 * the calculated "actual" (0, 0) point and sets this as the odometer start
+	 */
 	
 	private void risingEdge(){
 		double angleA, angleB;
@@ -84,27 +96,29 @@ public class USLocalizer {
 		odo.reset();
 	}
 	
-	//turns to the heading account for the heading correction angle
+	/*	
+	 * turns to the heading calculated to be the actual 0 position 
+	 * of the grid the robot is on, accounting for the heading 
+	 * wrap-around correction angle	
+	 */
 	private void turnActualZero(double angleA, double angleB){ 
 		if(angleA <= angleB){
-			setHeadingRealZero(angleA, angleB, ANGLE_CORR_LOW);
+			nav.turnTo(ANGLE_CORR_LOW - (angleA + angleB) / 2, true);
 		}
 		else if(angleA >= angleB) {
-			setHeadingRealZero(angleA, angleB, ANGLE_CORR_HI);
+			nav.turnTo(ANGLE_CORR_HI - (angleA + angleB) / 2, true);
 		}
 	}
 	
-	// set heading to calculated zero (average point between the two input angles) 
-	private void setHeadingRealZero(double angleA, double angleB, double angleCorrection){
-		nav.turnTo(angleCorrection - (angleA + angleB) / 2, true);
-	}
+	//TODO: implement a way to deal with noise in US readings
 	
-	//TODO: still need to implement a way to deal with noise in US readings
-	
+	/**	@return - filtered data */
 	private float getFilteredData() {
 		usSensor.fetchSample(usData, 0);
 		float distance = usData[0];
-				
+		
+		//TODO: implement data filter
+		
 		return distance;
 	}
 

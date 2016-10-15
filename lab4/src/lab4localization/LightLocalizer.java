@@ -14,6 +14,8 @@ public class LightLocalizer {
 	}
 	
 	public void doLocalization() {
+		//TODO: write doLocalization() method for LightLocalizer
+		
 		// drive to location listed in tutorial
 		// start rotating and clock all 4 gridlines
 		// do trig to compute (0,0) and 0 degrees
