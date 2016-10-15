@@ -186,11 +186,7 @@ public class Odometer implements TimerListener {
 			return d - 360.0;
 	}
 	
-	public void reset(){
-		/* TODO: figure out implementation of setPosition: the odometer initializes with theta = 90
-		 * as such, should we set it to 0 or set it to 90? (the initial value in the assignment code
-		 * was 90) */
-		
-		this.setPosition(new double [] {0.0, 0.0, 0.0}, new boolean [] {true, true, true});
+	public void reset(){		
+		this.setPosition(new double [] {0.0, 0.0, 90.0}, new boolean [] {true, true, true});
 	}
 }
