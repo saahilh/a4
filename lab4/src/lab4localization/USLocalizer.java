@@ -6,7 +6,6 @@ public class USLocalizer {
 	public enum LocalizationType { FALLING_EDGE, RISING_EDGE };
 	public static int ROTATION_SPEED = 30;
 	public static int US_MAX = 255;
-	private int empty = 420;
 
 	private Odometer odo;
 	private SampleProvider usSensor;
