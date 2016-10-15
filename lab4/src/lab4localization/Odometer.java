@@ -51,6 +51,7 @@ public class Odometer implements TimerListener {
 		 * @param rightRadius, leftRadius - radii of right wheel and left wheel respectively
 		 * @param width - track width; distance from the center of one wheel to the center of the other
 		*/
+		
 		this.rightRadius = 2.1;
 		this.leftRadius = 2.1;
 		this.width = 16.4;

@@ -30,19 +30,29 @@ public class USLocalizer {
 		this.nav = navigation;
 	}
 	
-	public void doLocalization() { 		
+	/*  
+	 * TODO: test fallingEdge() and risingEdge() in random starting orientations 
+	 * in the starting square and record data. determine which is better (lower 
+	 * standard deviation) and use that for the rest of the lab
+	 */
+	
+	public void doLocalization() {
 		if (locType == LocalizationType.FALLING_EDGE) {
 			fallingEdge();
-		} else {
+		} 
+		else {
 			risingEdge();
 		}
+		
+		/* TODO: make robot move forward to true (0,0), then reset
+		 * the odometer (unless this is to be done in LightLocalizer)
+		 */
 	}
 	
 	/* 
 	 * fallingEdge(): to be called when starting with US facing away from a wall
 	 * rotates till wall is found, sets this as angleA, reverses direction till
-	 * wall is found, sets this as angleB. finally, turns to the calculated "actual" 
-	 * (0, 0) point and sets this as the odometer start 
+	 * wall is found, sets this as angleB. finally, turns towards the true (0, 0)
 	 */
 	
 	private void fallingEdge(){ 
@@ -63,15 +73,13 @@ public class USLocalizer {
 		angleB = odo.getTheta();
 	
 		turnActualZero(angleA, angleB);
-
-		odo.reset(); //TODO: write this method
 	}
 	
 	/* 
 	 * risingEdge(): to be called when starting with US facing towards a wall
 	 * rotates till end of wall is found, sets this as angleB, reverses direction 
-	 * till other end of wall is found, sets this as angleA. finally, turns to
-	 * the calculated "actual" (0, 0) point and sets this as the odometer start
+	 * till other end of wall is found, sets this as angleA. finally, turns towards
+	 * true (0, 0)
 	 */
 	
 	private void risingEdge(){
@@ -92,8 +100,6 @@ public class USLocalizer {
 		angleA = odo.getTheta();
 	
 		turnActualZero(angleA, angleB);
-	
-		odo.reset();
 	}
 	
 	/*	
