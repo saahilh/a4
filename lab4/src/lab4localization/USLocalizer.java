@@ -9,13 +9,15 @@ public class USLocalizer {
 	/**
 	 * @param {int} US_MAX - max reading of ultrasonic sensor; used to assume no object is in front of the robot
 	 * @param {double} ANGLE_CORR_LOW, ANGLE_CORR_HI - parameters for correcting robot rotation wrap-around
-	 */
+	 * @param {int}	NOISE_MARGIN - margin for errors caused by noise in US readings
+	 */	
 	
-	//TODO: test ANGLE_CORR_LOW, ANGLE_CORR_HI, change if required; also modify US_MAX if needed
-		
 	public static int US_MAX = 255;
 	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 225;
-
+	public static int NOISE_MARGIN = 1;
+	//TODO: test ANGLE_CORR_LOW, ANGLE_CORR_HI, NOISE_MARGIN; change if required; also modify US_MAX if needed
+	//TODO: account for distance of US sensor from the origin point of the robot
+	
 	private Odometer odo;
 	private SampleProvider usSensor;
 	private float[] usData;

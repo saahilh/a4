@@ -6,6 +6,7 @@ public class LightLocalizer {
 	private Odometer odo;
 	private SampleProvider colorSensor;
 	private float[] colorData;	
+	//TODO: account for distance of light sensor from the origin point of the robot
 	
 	public LightLocalizer(Odometer odo, SampleProvider colorSensor, float[] colorData) {
 		this.odo = odo;
