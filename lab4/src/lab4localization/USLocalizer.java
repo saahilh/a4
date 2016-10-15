@@ -45,11 +45,7 @@ public class USLocalizer {
 		else {
 			risingEdge();
 		}
-		
-		/* 
-		 * TODO: make robot move forward to true (0,0), then reset
-		 * the odometer (unless this is to be done in LightLocalizer)
-		 */
+		//TODO: make the robot wait for a buttonpress, as it has rotated once it reaches this point
 	}
 	
 	/* 

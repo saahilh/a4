@@ -23,7 +23,7 @@ public class Lab4 {
 
 	/* 
 	 * TODO for lab:
-	 * PART 1
+	 * PART 1	-	USLocalizer.java
 	 * 	TASK
 	 * 		1. localize and determine position
 	 * 		2. turn robot towards its "0°" heading relative to (0, 0)
@@ -35,7 +35,7 @@ public class Lab4 {
 	 *			  tolerance of ±10°. A penalty of -2 points per ±5° is imposed after the 
 	 *		      initial ±10°.
 	 *
-	 * PART 2
+	 * PART 2	-	LightLocalizer.java
 	 * 		3. turn robot back to (0, 0) and move to it
 	 * 		4. turn to your robot's 0° heading again
 	 * GRADING 
