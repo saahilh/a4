@@ -127,6 +127,20 @@ public class Odometer implements TimerListener {
 			return y;
 		}
 	}
+	
+	public void setX(double x){
+		synchronized (this) {
+			this.x = x;
+		}
+	}
+	
+	public void setY(double y){
+		synchronized (this) {
+			this.y = y;
+		}
+	}
+	
+	
 
 	// return theta value
 	public double getTheta() {
