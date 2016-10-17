@@ -17,7 +17,7 @@ public class Lab4 {
 	 * Color sensor port connected to input S2
 	 */
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 	private static final Port usPort = LocalEV3.get().getPort("S1");		
 	private static final Port colorPort = LocalEV3.get().getPort("S2");		
 
@@ -79,15 +79,16 @@ public class Lab4 {
 		//setup navigation that uses the instantiated odometer
 		Navigation nav = new Navigation(odo);
 		
-		// perform the ultrasonic localization
-		USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
-		usl.doLocalization();
+		while (Button.waitForAnyPress() != Button.ID_RIGHT);
 		
-		//waits after US localization
-		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+		// perform the ultrasonic localization
+		//USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
+		//usl.doLocalization();
+		
+		//while (Button.waitForAnyPress() != Button.ID_RIGHT);
 		
 		// perform the light sensor localization
-		LightLocalizer lsl = new LightLocalizer(odo, colorValue, colorData);
+		LightLocalizer lsl = new LightLocalizer(odo, nav, colorValue, colorData);
 		lsl.doLocalization();	
 		
 		while (Button.waitForAnyPress() != Button.ID_ESCAPE);

@@ -54,7 +54,7 @@ public class Odometer implements TimerListener {
 		
 		this.rightRadius = 2.1;
 		this.leftRadius = 2.1;
-		this.width = 16.4;
+		this.width = 16;
 		
 		this.x = 0.0;
 		this.y = 0.0;
@@ -127,6 +127,20 @@ public class Odometer implements TimerListener {
 			return y;
 		}
 	}
+	
+	public void setX(double x){
+		synchronized (this) {
+			this.x = x;
+		}
+	}
+	
+	public void setY(double y){
+		synchronized (this) {
+			this.y = y;
+		}
+	}
+	
+	
 
 	// return theta value
 	public double getTheta() {
@@ -191,6 +205,6 @@ public class Odometer implements TimerListener {
 	}
 	
 	public void reset(){		
-		this.setPosition(new double [] {0.0, 0.0, 90.0}, new boolean [] {true, true, true});
+		this.setPosition(new double [] {0.0, 0.0, 0.0}, new boolean [] {true, true, true});
 	}
 }

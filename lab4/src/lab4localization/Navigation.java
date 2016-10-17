@@ -13,8 +13,8 @@ package lab4localization;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class Navigation {
-	final static int FAST = 200, SLOW = 100, ACCELERATION = 4000;
-	final static double DEG_ERR = 3.0, CM_ERR = 1.0;
+	final static int FAST = 200, SLOW = 50, ACCELERATION = 4000;
+	final static double DEG_ERR = 5.0, CM_ERR = 1.0;
 	private Odometer odometer;
 	private EV3LargeRegulatedMotor leftMotor, rightMotor;
 
@@ -87,14 +87,14 @@ public class Navigation {
 	 * travelTo function which takes as arguments the x and y position in cm Will travel to designated position, while
 	 * constantly updating it's heading
 	 */
-	public void travelTo(double x, double y) {
+	public void travelTo(double x, double y, float speed) {
 		double minAng;
 		while (Math.abs(x - odometer.getX()) > CM_ERR || Math.abs(y - odometer.getY()) > CM_ERR) {
 			minAng = (Math.atan2(y - odometer.getY(), x - odometer.getX())) * (180.0 / Math.PI);
 			if (minAng < 0)
 				minAng += 360.0;
 			this.turnTo(minAng, false);
-			this.setSpeeds(FAST, FAST);
+			this.setSpeeds(speed, speed);
 		}
 		this.setSpeeds(0, 0);
 	}
@@ -131,7 +131,8 @@ public class Navigation {
 	 * Go forward a set distance in cm
 	 */
 	public void goForward(double distance) {
-		this.travelTo(Math.cos(Math.toRadians(this.odometer.getTheta())) * distance, Math.cos(Math.toRadians(this.odometer.getTheta())) * distance);
+	//	this.travelTo(Math.cos(Math.toRadians(this.odometer.getTheta())) * distance, Math.sin(Math.toRadians(this.odometer.getTheta())) * distance);
+
 
 	}
 }
