@@ -205,6 +205,6 @@ public class Odometer implements TimerListener {
 	}
 	
 	public void reset(){		
-		this.setPosition(new double [] {0.0, 0.0, 0.0}, new boolean [] {true, true, true});
+		this.setPosition(new double [] {0.0, 0.0, 90.0}, new boolean [] {true, true, true});
 	}
 }
