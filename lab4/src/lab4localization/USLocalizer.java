@@ -1,5 +1,7 @@
 package lab4localization;
 
+import java.util.Arrays;
+
 import lejos.robotics.SampleProvider;
 
 public class USLocalizer {
@@ -12,9 +14,11 @@ public class USLocalizer {
 	 * @param {int}	NOISE_MARGIN - margin for errors caused by noise in US readings
 	 */	
 	
-	public static int US_MAX = 255;
-	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 225;
+	public static int US_MAX = 40;
+	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 235;
 	public static int NOISE_MARGIN = 1;
+	public final double	us_SensorDistanceFromOrigin = 4.0;
+	private static int measuredDistance = 35;
 	//TODO: test ANGLE_CORR_LOW, ANGLE_CORR_HI, NOISE_MARGIN; change if required; also modify US_MAX if needed
 	//TODO: account for distance of US sensor from the origin point of the robot
 	
@@ -57,23 +61,42 @@ public class USLocalizer {
 	 */
 	
 	private void fallingEdge(){ 
-		double angleA, angleB;
+		double angleA, angleB, angleTemp1, angleTemp2;
 		
-		while(getFilteredData() >= US_MAX){
+		while(getFilteredData(4) >= measuredDistance + NOISE_MARGIN){        //Rotate to beginning of noise margin
 			nav.rotate(ROTATION_SPEED);
 		}
-		angleA = odo.getTheta();
 		
-		while(getFilteredData() < US_MAX){
+		angleTemp1 = odo.getTheta();							   // Robot has entered the noise margin, get first temp angle
+		
+		while(getFilteredData(4) >= measuredDistance - NOISE_MARGIN){       // Rotate until robot has exited noise margin
+			nav.rotate(ROTATION_SPEED);	
+		}
+		
+		angleTemp2 = odo.getTheta();                              // Get second temp angle 
+		angleA = (angleTemp1 + angleTemp2)/2;                    //Calculate first falling edge 
+		
+		while(getFilteredData(4) < measuredDistance + NOISE_MARGIN){      //Rotate other way out of noise margin
 			nav.rotate(-ROTATION_SPEED);
 		}
 		
-		while(getFilteredData() >= US_MAX){
+		while(getFilteredData(4) >= measuredDistance + NOISE_MARGIN){    //Rotate until the robot reaches the noise margin
 			nav.rotate(-ROTATION_SPEED);
 		}
-		angleB = odo.getTheta();
-	
-		turnActualZero(angleA, angleB);
+		angleTemp1 = odo.getTheta();                           //Robot has reached the noise margin, take first temp angle 
+		
+		while(getFilteredData(5) >= measuredDistance - NOISE_MARGIN){    //Rotate until exit noise margin, record second temp angle
+			nav.rotate(-ROTATION_SPEED);	
+		}
+		angleTemp2 = odo.getTheta();
+		angleB = (angleTemp1 + angleTemp2)/2;                 // Calculate second falling edge 
+		
+		turnActualZero(angleA, angleB);                      // Turn to correct zero positioning 
+		boolean [] set = {true,true,true};
+		double [] zeroP = {0.0, 0.0, 0.0};					//Update Odometer
+		odo.setPosition(zeroP,set);
+		
+
 	}
 	
 	/* 
@@ -84,23 +107,39 @@ public class USLocalizer {
 	 */
 	
 	private void risingEdge(){
-		double angleA, angleB;
+		double angleA, angleB, angleTemp1, angleTemp2;
 		
-		while(getFilteredData() < US_MAX){
+		while(getFilteredData(4) < measuredDistance - NOISE_MARGIN){
 			nav.rotate(ROTATION_SPEED);
 		}
-		angleB = odo.getTheta();
+		angleTemp1 = odo.getTheta();
 		
-		while(getFilteredData() >= US_MAX){
+		while(getFilteredData(4) <= measuredDistance +NOISE_MARGIN){
+			nav.rotate(ROTATION_SPEED);
+		}
+		angleTemp2 = odo.getTheta();
+		angleA = (angleTemp1 + angleTemp2)/2;
+		
+		while(getFilteredData(4) > measuredDistance - NOISE_MARGIN){
 			nav.rotate(-ROTATION_SPEED);
 		}
 		
-		while(getFilteredData() < US_MAX){
+		while(getFilteredData(4) <= measuredDistance - NOISE_MARGIN){
 			nav.rotate(-ROTATION_SPEED);
 		}
-		angleA = odo.getTheta();
+		angleTemp1= odo.getTheta();
+		
+		while(getFilteredData(4) <= measuredDistance + NOISE_MARGIN){
+			nav.rotate(-ROTATION_SPEED);
+		}
+		angleTemp2 = odo.getTheta();
+		angleB = (angleTemp1 + angleTemp2)/2;
 	
 		turnActualZero(angleA, angleB);
+		
+		boolean [] set = {true,true,true};
+		double [] zeroP = {0.0, 0.0, 0.0};					//Update Odometer
+		odo.setPosition(zeroP,set);
 	}
 	
 	/*	
@@ -110,23 +149,37 @@ public class USLocalizer {
 	 */
 	private void turnActualZero(double angleA, double angleB){ 
 		if(angleA <= angleB){
-			nav.turnTo(ANGLE_CORR_LOW - (angleA + angleB) / 2, true);
+			nav.turnTo(ANGLE_CORR_LOW - (angleA + angleB)/2, true);
 		}
 		else if(angleA >= angleB) {
-			nav.turnTo(ANGLE_CORR_HI - (angleA + angleB) / 2, true);
+			nav.turnTo(ANGLE_CORR_HI - (angleA + angleB)/2, true);
 		}
 	}
 	
 	//TODO: implement a way to deal with noise in US readings
 	
 	/**	@return - filtered data */
-	private float getFilteredData() {
-		usSensor.fetchSample(usData, 0);
-		float distance = usData[0];
-		
-		//TODO: implement data filter
-		
-		return distance;
-	}
+	private float getFilteredData(int sampleSize){
 
+		float sampleData[] = new float[sampleSize];
+
+		for(int index = 0 ; index < sampleData.length; index++)
+		{
+			usSensor.fetchSample(usData, 0);
+
+			if(usData[0]*100 > US_MAX)
+				usData[0] = US_MAX;
+
+			sampleData[index] = usData[0]*100;
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		Arrays.sort(sampleData);
+		return sampleData[(int) Math.floor(sampleData.length/2)];
+	}
 }
+
