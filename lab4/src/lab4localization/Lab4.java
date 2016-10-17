@@ -83,6 +83,9 @@ public class Lab4 {
 		USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
 		usl.doLocalization();
 		
+		//waits after US localization
+		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+		
 		// perform the light sensor localization
 		LightLocalizer lsl = new LightLocalizer(odo, colorValue, colorData);
 		lsl.doLocalization();	
