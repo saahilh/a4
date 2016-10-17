@@ -34,13 +34,21 @@ public class LightLocalizer {
 		
 		//determining x theta and y theta:
 		findBlackLines();
+		nav.setSpeeds(0, 0);
 		
 		double thetaX = blackLines[2] - blackLines[0];
 		double thetaY = blackLines[3] - blackLines[1];
 		
-		double trueX = (-LS_DIST)   * Math.cos(thetaX/2);
-		double trueY = (-LS_DIST/2) * Math.cos(thetaY/2);
-
+		double trueX = (-LS_DIST) * Math.cos(thetaX/2);
+		double trueY = (-LS_DIST) * Math.cos(thetaY/2);
+		
+		odo.setPosition(new double[]{trueX, trueY, -1}, new boolean[]{true, true, false} );
+		
+		nav.travelTo(0, 0, FORWARD_SPEED);
+		
+		nav.turnTo(0, true);
+		
+		odo.reset();
 	}
 	
 	private boolean blackLineDetected(){
@@ -86,6 +94,8 @@ public class LightLocalizer {
 			}
 			Sound.beep();
 			blackLines[i] = odo.getTheta();
+			
+			if(i == 3) break;
 			
 			//turn away from black line to avoid capturing the same line twice
 			while(odo.getTheta() > blackLines[i] - 15*Math.PI/180){
