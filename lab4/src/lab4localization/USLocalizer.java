@@ -41,13 +41,17 @@ public class USLocalizer {
 	 */
 	
 	public void doLocalization() {
+		double zeroHeading;
 		if (locType == LocalizationType.FALLING_EDGE) {
-			fallingEdge();
+			zeroHeading = fallingEdge();
 		} 
-		else {
-			risingEdge();
+		else if (locType == LocalizationType.RISING_EDGE){
+			zeroHeading = risingEdge();
 		}
-		//TODO: make the robot wait for a buttonpress, as it has rotated once it reaches this point
+		else{
+			throw new Error("Invalid localization type selected");
+		}
+		nav.turnTo(zeroHeading, true);
 	}
 	
 	/* 
@@ -56,7 +60,7 @@ public class USLocalizer {
 	 * wall is found, sets this as angleB. finally, turns towards the true (0, 0)
 	 */
 	
-	private void fallingEdge(){ 
+	private double fallingEdge(){ 
 		double angleA, angleB;
 		
 		while(getFilteredData() >= US_MAX){
@@ -73,7 +77,7 @@ public class USLocalizer {
 		}
 		angleB = odo.getTheta();
 	
-		turnActualZero(angleA, angleB);
+		return getActualZero(angleA, angleB);
 	}
 	
 	/* 
@@ -83,7 +87,7 @@ public class USLocalizer {
 	 * true (0, 0)
 	 */
 	
-	private void risingEdge(){
+	private double risingEdge(){
 		double angleA, angleB;
 		
 		while(getFilteredData() < US_MAX){
@@ -100,21 +104,22 @@ public class USLocalizer {
 		}
 		angleA = odo.getTheta();
 	
-		turnActualZero(angleA, angleB);
+		return getActualZero(angleA, angleB);
 	}
 	
 	/*	
-	 * turns to the heading calculated to be the actual 0 position 
+	 * Turns to the heading calculated to be the actual 0 position 
 	 * of the grid the robot is on, accounting for the heading 
-	 * wrap-around correction angle	
+	 * wrap-around correction angle.	
 	 */
-	private void turnActualZero(double angleA, double angleB){ 
+	private double getActualZero(double angleA, double angleB){ 
 		if(angleA <= angleB){
-			nav.turnTo(ANGLE_CORR_LOW - (angleA + angleB) / 2, true);
+			return ANGLE_CORR_LOW - (angleA + angleB) / 2;
 		}
-		else if(angleA >= angleB) {
-			nav.turnTo(ANGLE_CORR_HI - (angleA + angleB) / 2, true);
+		else if(angleA > angleB) {
+			return ANGLE_CORR_HI - (angleA + angleB) / 2;
 		}
+		throw new Error("Actual zero calculation error.");
 	}
 	
 	//TODO: implement a way to deal with noise in US readings
