@@ -7,17 +7,14 @@ public class LightLocalizer {
 	private Odometer odo;
 	private SampleProvider colorSensor;
 	private float[] colorData;
-	private final double sensorDistance = 8.5;
+	private final double LS_DIST = 8.5;
 	private final int ROTATION_SPEED = 35;
-	private final int driveSpeed = 45;
+	private final int FORWARD_SPEED = 45;
 	private final int lineDetectionValue = 40;
 	private final double tileSize = 30.48;
 	private Navigation nav;
 	double blackLines[] = new double[4];
 
-			
-	//TODO: account for distance of light sensor from the origin point of the robot
-	
 	public LightLocalizer(Odometer odo, Navigation nav, SampleProvider colorSensor, float[] colorData) {
 		this.odo = odo;
 		this.colorSensor = colorSensor;
@@ -25,60 +22,24 @@ public class LightLocalizer {
 		this.nav = nav;
 	}
 	
-	public void doLocalization() {
-		//TODO: write doLocalization() method for LightLocalizer
-		
+	public void doLocalization() {		
 		// drive to location listed in tutorial
 		// start rotating and clock all 4 gridlines
 		// do trig to compute (0,0) and 0 degrees
 		// when done travel to (0,0) and turn to 0 degrees
-		odo.setPosition(new double [] {0,0,0}, new boolean[] {false,false,true});
+		odo.setPosition(new double [] {-1,-1,0}, new boolean[] {false,false,true});
 		
-		while(!blackLineDetected()){											// Travel to point on grid
-			nav.setSpeeds(driveSpeed, driveSpeed);
-		}
-		Sound.beep();
-		odo.setPosition(new double [] {-sensorDistance,0,0}, new boolean[] {true,false,false});
-		nav.travelTo(-sensorDistance/2, 0, driveSpeed);
-		nav.rotate(-ROTATION_SPEED);
-		nav.turnTo(90, true);
-		odo.setPosition(new double [] {-sensorDistance/2,0,90}, new boolean[] {true,true,true});
+		// travel to starting point on grid
+		moveToGridStart();
 		
-		while(!blackLineDetected()){
-			nav.setSpeeds(driveSpeed, driveSpeed);
-		}
-		Sound.beep();
-		
-		nav.setSpeeds(0, 0);
-		odo.setPosition(new double [] {-sensorDistance,-sensorDistance,90}, new boolean[] {true,true,false});
-		nav.travelTo(-sensorDistance, -sensorDistance/2, driveSpeed);
-		nav.turnTo(180, true);
-		odo.setPosition(new double [] {-sensorDistance/2,-sensorDistance/2,180}, new boolean[] {false,true,true});  //positioned to start trig...unsure if theta should be -90 or 0
-		
-		//determineing theta y and x theta
-		
-       //rotate until we detect the y axis
-		nav.rotate(ROTATION_SPEED);
-		
-		for (int i = 0; i < blackLines.length; i++){
-			while(!blackLineDetected()){
-				nav.rotate(ROTATION_SPEED);
-			}
-			Sound.beep();
-			blackLines[i] = odo.getTheta();
-			
-			//turn off of black line so as not to capture the same line twice
-			while(odo.getTheta() > blackLines[i] - 15*Math.PI/180){
-				Sound.buzz();
-				nav.rotate(ROTATION_SPEED);
-			}
-		}
+		//determining x theta and y theta:
+		findBlackLines();
 		
 		double thetaX = blackLines[2] - blackLines[0];
 		double thetaY = blackLines[3] - blackLines[1];
 		
-		double trueX = -sensorDistance* Math.cos(thetaX/2);
-		double trueY = -(sensorDistance/2)*Math.cos(thetaY/2);
+		double trueX = (-LS_DIST)   * Math.cos(thetaX/2);
+		double trueY = (-LS_DIST/2) * Math.cos(thetaY/2);
 
 	}
 	
@@ -93,5 +54,45 @@ public class LightLocalizer {
 			return false;
 		}
 	}
+	
+	private void moveToGridStart(){
+		while(!blackLineDetected()){
+			nav.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
+		}
+		Sound.beep();
+		odo.setPosition(new double [] {-LS_DIST,-1,-1}, new boolean[] {true,false,false});
+		nav.travelTo(-LS_DIST/2, 0, FORWARD_SPEED);
+		nav.rotate(-ROTATION_SPEED);
+		nav.turnTo(90, true);
+		odo.setPosition(new double [] {-LS_DIST/2,0,90}, new boolean[] {true,true,true});
+		
+		while(!blackLineDetected()){
+			nav.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
+		}
+		Sound.beep();
+		
+		nav.setSpeeds(0,0);
+		odo.setPosition(new double [] {-LS_DIST,-LS_DIST,-1}, new boolean[] {true,true,false});
+		nav.travelTo(-LS_DIST, -LS_DIST/2, FORWARD_SPEED);
+		nav.turnTo(180, true);
+		odo.setPosition(new double [] {-1,-LS_DIST/2,180}, new boolean[] {false,true,true});
+	}
 
+	/*	finds all the black lines and stores in the array blackLines[]	*/
+	private void findBlackLines(){ 
+		for (int i = 0; i < blackLines.length; i++){
+			while(!blackLineDetected()){
+				nav.rotate(ROTATION_SPEED);
+			}
+			Sound.beep();
+			blackLines[i] = odo.getTheta();
+			
+			//turn away from black line to avoid capturing the same line twice
+			while(odo.getTheta() > blackLines[i] - 15*Math.PI/180){
+				Sound.buzz();
+				nav.rotate(ROTATION_SPEED);
+			}
+		}
+	}
+	
 }
