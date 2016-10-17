@@ -2,6 +2,7 @@ package lab4localization;
 
 import java.util.Arrays;
 
+import lejos.hardware.Sound;
 import lejos.robotics.SampleProvider;
 
 public class USLocalizer {
@@ -61,40 +62,29 @@ public class USLocalizer {
 	 * rotates till wall is found, sets this as angleA, reverses direction till
 	 * wall is found, sets this as angleB. finally, turns towards the true (0, 0)
 	 */
-	
 	private void fallingEdge(){ 
 		double angleA, angleB, angleTemp1, angleTemp2;
 		
-		while(getFilteredData(4) >= measuredDistance + NOISE_MARGIN){        //Rotate to beginning of noise margin
-			nav.rotate(ROTATION_SPEED);
-		}
+		rotateWhile(4, US_MAX, false, ROTATION_SPEED); //rotate till no longer facing a wall
 		
-		angleTemp1 = odo.getTheta();							   // Robot has entered the noise margin, get first temp angle
+		rotateWhile(4, measuredDistance + NOISE_MARGIN, true, ROTATION_SPEED);  //rotate to beginning of noise margin
+		angleTemp1 = odo.getTheta();							   				//robot has entered the noise margin, get first temp angle
+		rotateWhile(4, measuredDistance - NOISE_MARGIN, true, ROTATION_SPEED); 	//rotate until robot has exited noise margin
+		angleTemp2 = odo.getTheta();                             				//get second temp angle 
 		
-		while(getFilteredData(4) >= measuredDistance - NOISE_MARGIN){       // Rotate until robot has exited noise margin
-			nav.rotate(ROTATION_SPEED);	
-		}
+		angleA = (angleTemp1 + angleTemp2)/2;                    				//calculate first falling edge 
 		
-		angleTemp2 = odo.getTheta();                              // Get second temp angle 
-		angleA = (angleTemp1 + angleTemp2)/2;                    //Calculate first falling edge 
+		rotateWhile(4, measuredDistance + NOISE_MARGIN, false, -ROTATION_SPEED);//rotate other way out of noise margin
 		
-		while(getFilteredData(4) < measuredDistance + NOISE_MARGIN){      //Rotate other way out of noise margin
-			nav.rotate(-ROTATION_SPEED);
-		}
-		
-		while(getFilteredData(4) >= measuredDistance + NOISE_MARGIN){    //Rotate until the robot reaches the noise margin
-			nav.rotate(-ROTATION_SPEED);
-		}
-
-		angleTemp1 = odo.getTheta();                           //Robot has reached the noise margin, take first temp angle 
-		
-		while(getFilteredData(5) >= measuredDistance - NOISE_MARGIN){    //Rotate until exit noise margin, record second temp angle
-			nav.rotate(-ROTATION_SPEED);	
-		}
+		rotateWhile(4, measuredDistance + NOISE_MARGIN, true, -ROTATION_SPEED); //rotate until the robot reaches the noise margin
+		angleTemp1 = odo.getTheta();                           					//robot has reached the noise margin, take first temp angle 
+		rotateWhile(5, measuredDistance - NOISE_MARGIN, true, -ROTATION_SPEED); //rotate until exit noise margin, record second temp angle
 		angleTemp2 = odo.getTheta();
-		angleB = (angleTemp1 + angleTemp2)/2;                 // Calculate second falling edge 
 		
-		turnActualZero(angleA, angleB);                      // Turn to correct zero positioning 
+		angleB = (angleTemp1 + angleTemp2)/2;                 					//calculate second falling edge 
+		
+		turnActualZero(angleA, angleB);                      					//turn to correct zero positioning 
+		
 		odo.reset();
 	}
 	
@@ -108,30 +98,22 @@ public class USLocalizer {
 	private void risingEdge(){
 		double angleA, angleB, angleTemp1, angleTemp2;
 		
-		while(getFilteredData(4) < measuredDistance - NOISE_MARGIN){
-			nav.rotate(ROTATION_SPEED);
-		}
-		angleTemp1 = odo.getTheta();
+		rotateWhile(4, US_MAX, true, ROTATION_SPEED);
 		
-		while(getFilteredData(4) <= measuredDistance + NOISE_MARGIN){
-			nav.rotate(ROTATION_SPEED);
-		}
+		rotateWhile(4, measuredDistance - NOISE_MARGIN, false, ROTATION_SPEED);
+		angleTemp1 = odo.getTheta();
+		rotateWhile(4, measuredDistance + NOISE_MARGIN, false, ROTATION_SPEED);
 		angleTemp2 = odo.getTheta();
+		
 		angleA = (angleTemp1 + angleTemp2)/2;
 		
-		while(getFilteredData(4) > measuredDistance - NOISE_MARGIN){
-			nav.rotate(-ROTATION_SPEED);
-		}
+		rotateWhile(4, measuredDistance - NOISE_MARGIN, true, -ROTATION_SPEED);
 		
-		while(getFilteredData(4) <= measuredDistance - NOISE_MARGIN){
-			nav.rotate(-ROTATION_SPEED);
-		}
+		rotateWhile(4, measuredDistance - NOISE_MARGIN, false, -ROTATION_SPEED);
 		angleTemp1= odo.getTheta();
-		
-		while(getFilteredData(4) <= measuredDistance + NOISE_MARGIN){
-			nav.rotate(-ROTATION_SPEED);
-		}
+		rotateWhile(4, measuredDistance + NOISE_MARGIN, false, -ROTATION_SPEED);
 		angleTemp2 = odo.getTheta();
+		
 		angleB = (angleTemp1 + angleTemp2)/2;
 	
 		turnActualZero(angleA, angleB);
@@ -145,6 +127,8 @@ public class USLocalizer {
 	 * wrap-around correction angle.	
 	 */
 	private void turnActualZero(double angleA, double angleB){ 
+		if(!(angleA>0 || angleA <= 0)) Sound.beep();
+		if(!(angleB>0 || angleB <= 0)) Sound.buzz();
 		if(angleA <= angleB){
 			nav.turnTo(ANGLE_CORR_LOW - (angleA + angleB)/2, true);
 		}
@@ -170,12 +154,33 @@ public class USLocalizer {
 			try {
 				Thread.sleep(5);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		Arrays.sort(sampleData);
 		return sampleData[(int) Math.floor(sampleData.length/2)];
 	}
+	/**
+	 * @param filterSampleSize - size of filter to be used for while loop
+	 * @param toCompare - the value to be compared with getFilteredData(filterSampleSize)
+	 * @param greaterOrLess - compare greater than or less than? true = >=, false = <
+	 * @param rotateSpeed - speed of rotation; can be positive or negative
+	 * 
+	 * rotateWhile() - Compares the filter result with the value in @param toCompare using the sign indicated by @param greaterOrLess. While true continues to rotate at @param rotateSpeed.
+	 */
+	private void rotateWhile(int filterSampleSize, int toCompare, boolean greaterOrLess, int rotateSpeed){
+		if(greaterOrLess == true){
+			while(getFilteredData(filterSampleSize) >= toCompare){
+				nav.rotate(rotateSpeed);
+			}
+		}
+		else if (greaterOrLess == false){
+			while(getFilteredData(filterSampleSize) < toCompare){
+				nav.rotate(rotateSpeed);
+			}
+		}
+		throw new Error("Invalid value for greaterOrLess in rotateWhile method.");
+	}
+	
 }
 
