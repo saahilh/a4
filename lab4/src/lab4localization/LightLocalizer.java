@@ -1,23 +1,28 @@
 package lab4localization;
 
 import lejos.robotics.SampleProvider;
+import lejos.hardware.Sound;
 
 public class LightLocalizer {
 	private Odometer odo;
 	private SampleProvider colorSensor;
 	private float[] colorData;
-	private final double[]  calibrationCoordinates = {-3.0,-3.0};
-	private final double sensorDistance = 4.0;
-	private final int ROTATION_SPEED = 25;
-	private final int driveSpeed = 30;
-	private final int lineDetectionValue = 20;
+	private final double sensorDistance = 8.5;
+	private final int ROTATION_SPEED = 35;
+	private final int driveSpeed = 45;
+	private final int lineDetectionValue = 40;
+	private final double tileSize = 30.48;
 	private Navigation nav;
+	double blackLines[] = new double[4];
+
+			
 	//TODO: account for distance of light sensor from the origin point of the robot
 	
-	public LightLocalizer(Odometer odo, SampleProvider colorSensor, float[] colorData) {
+	public LightLocalizer(Odometer odo, Navigation nav, SampleProvider colorSensor, float[] colorData) {
 		this.odo = odo;
 		this.colorSensor = colorSensor;
 		this.colorData = colorData;
+		this.nav = nav;
 	}
 	
 	public void doLocalization() {
@@ -27,59 +32,57 @@ public class LightLocalizer {
 		// start rotating and clock all 4 gridlines
 		// do trig to compute (0,0) and 0 degrees
 		// when done travel to (0,0) and turn to 0 degrees
-
+		odo.setPosition(new double [] {0,0,0}, new boolean[] {false,false,true});
+		
 		while(!blackLineDetected()){											// Travel to point on grid
 			nav.setSpeeds(driveSpeed, driveSpeed);
 		}
-		
-		nav.setSpeeds(0, 0);
-		odo.setPosition(new double [] {-sensorDistance,0,0}, new boolean[] {true,true,true});
-		nav.turnTo(-90, true);
+		Sound.beep();
+		odo.setPosition(new double [] {-sensorDistance,0,0}, new boolean[] {true,false,false});
+		nav.travelTo(-sensorDistance/2, 0, driveSpeed);
+		nav.rotate(-ROTATION_SPEED);
+		nav.turnTo(90, true);
+		odo.setPosition(new double [] {-sensorDistance/2,0,90}, new boolean[] {true,true,true});
 		
 		while(!blackLineDetected()){
 			nav.setSpeeds(driveSpeed, driveSpeed);
 		}
-		nav.goForward(sensorDistance/2);
+		Sound.beep();
+		
 		nav.setSpeeds(0, 0);
-		odo.setPosition(new double [] {-sensorDistance,-sensorDistance/2,-90}, new boolean[] {true,true,true});  //positioned to start trig...unsure if theta should be -90 or 0
+		odo.setPosition(new double [] {-sensorDistance,-sensorDistance,90}, new boolean[] {true,true,false});
+		nav.travelTo(-sensorDistance, -sensorDistance/2, driveSpeed);
+		nav.turnTo(180, true);
+		odo.setPosition(new double [] {-sensorDistance/2,-sensorDistance/2,180}, new boolean[] {false,true,true});  //positioned to start trig...unsure if theta should be -90 or 0
 		
-		//determineing theta y
+		//determineing theta y and x theta
 		
-		while(!blackLineDetected()){        //rotate until we detect the y axis
+       //rotate until we detect the y axis
 		nav.rotate(ROTATION_SPEED);
-		}
 		
-		double angleA = odo.getTheta();    //Rotate until we detect the -y axis
-		
-		for (int i = 1; i <= 1; i++){
+		for (int i = 0; i < blackLines.length; i++){
 			while(!blackLineDetected()){
 				nav.rotate(ROTATION_SPEED);
-			}	
+			}
+			Sound.beep();
+			blackLines[i] = odo.getTheta();
+			
+			//turn off of black line so as not to capture the same line twice
+			while(odo.getTheta() > blackLines[i] - 15*Math.PI/180){
+				Sound.buzz();
+				nav.rotate(ROTATION_SPEED);
+			}
 		}
 		
-		double angleB = odo.getTheta();
-		double angleY = angleB- angleA;    //calculate angle Y
+		double thetaX = blackLines[2] - blackLines[0];
+		double thetaY = blackLines[3] - blackLines[1];
 		
-		//calculating actual x
-		
-		double trueX = -sensorDistance*Math.cos(angleY/2);
-		
-		//rotate back to -90 degrees and start calculating our actual y value
-		
-		nav.turnTo(-90, true);
-		
-		//rotate counterclockwise until we detect the -x axis
-		
-		while(!blackLineDetected()){
-			nav.rotate(-ROTATION_SPEED);
-		}
-				
-		
+		double trueX = -sensorDistance* Math.cos(thetaX/2);
+		double trueY = -(sensorDistance/2)*Math.cos(thetaY/2);
 
-		
 	}
-	private boolean blackLineDetected()
-	{
+	
+	private boolean blackLineDetected(){
 		colorSensor.fetchSample(colorData, 0);
 
 		//if we run over a black line, calculate and update odometer values
