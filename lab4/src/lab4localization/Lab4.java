@@ -82,10 +82,10 @@ public class Lab4 {
 		while (Button.waitForAnyPress() != Button.ID_RIGHT);
 		
 		// perform the ultrasonic localization
-		//USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
-		//usl.doLocalization();
+		USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
+		usl.doLocalization();
 		
-		//while (Button.waitForAnyPress() != Button.ID_RIGHT);
+		while (Button.waitForAnyPress() != Button.ID_RIGHT);
 		
 		// perform the light sensor localization
 		LightLocalizer lsl = new LightLocalizer(odo, nav, colorValue, colorData);

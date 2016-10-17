@@ -15,7 +15,7 @@ public class USLocalizer {
 	 */	
 	
 	public static int US_MAX = 40;
-	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 230;
+	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 235;
 	public static int NOISE_MARGIN = 1;
 	public final double	us_SensorDistanceFromOrigin = 4.0;
 	private static int measuredDistance = 35;
