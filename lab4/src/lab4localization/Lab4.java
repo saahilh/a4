@@ -79,13 +79,17 @@ public class Lab4 {
 		//setup navigation that uses the instantiated odometer
 		Navigation nav = new Navigation(odo);
 		
+		while (Button.waitForAnyPress() != Button.ID_RIGHT);
+		
 		// perform the ultrasonic localization
-		USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
-		usl.doLocalization();
+		//USLocalizer usl = new USLocalizer(odo, nav, usValue, usData, USLocalizer.LocalizationType.FALLING_EDGE);
+		//usl.doLocalization();
+		
+		//while (Button.waitForAnyPress() != Button.ID_RIGHT);
 		
 		// perform the light sensor localization
-		//LightLocalizer lsl = new LightLocalizer(odo, colorValue, colorData);
-		//lsl.doLocalization();	
+		LightLocalizer lsl = new LightLocalizer(odo, nav, colorValue, colorData);
+		lsl.doLocalization();	
 		
 		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
 		System.exit(0);	
