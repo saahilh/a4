@@ -135,7 +135,9 @@ public class USLocalizer {
 		else if(angleA >= angleB) {
 			nav.turnTo(ANGLE_CORR_HI - (angleA + angleB)/2, true);
 		}
-		throw new Error("Actual zero calculation error.");
+		else{
+			throw new Error("Actual zero calculation error.");	
+		}
 	}
 	
 	/**	@return - filtered data */
@@ -179,7 +181,9 @@ public class USLocalizer {
 				nav.rotate(rotateSpeed);
 			}
 		}
-		throw new Error("Invalid value for greaterOrLess in rotateWhile method.");
+		else{
+			throw new Error("Invalid value for greaterOrLess in rotateWhile method.");
+		}
 	}
 	
 }

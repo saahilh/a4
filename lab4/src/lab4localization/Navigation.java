@@ -14,7 +14,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class Navigation {
 	final static int FAST = 200, SLOW = 50, ACCELERATION = 4000;
-	final static double DEG_ERR = 5.0, CM_ERR = 2.0;
+	final static double DEG_ERR = 5.0, CM_ERR = 0.5;
 	private Odometer odometer;
 	private EV3LargeRegulatedMotor leftMotor, rightMotor;
 
@@ -87,7 +87,7 @@ public class Navigation {
 	 * travelTo function which takes as arguments the x and y position in cm Will travel to designated position, while
 	 * constantly updating it's heading
 	 */
-	public void travelTo(double x, double y, float speed) {
+	public void travelTo(double x, double y, int speed) {
 		double minAng;
 		while (Math.abs(x - odometer.getX()) > CM_ERR || Math.abs(y - odometer.getY()) > CM_ERR) {
 			minAng = (Math.atan2(y - odometer.getY(), x - odometer.getX())) * (180.0 / Math.PI);
