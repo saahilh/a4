@@ -7,20 +7,18 @@ import lejos.robotics.SampleProvider;
 
 public class USLocalizer {
 	public enum LocalizationType { FALLING_EDGE, RISING_EDGE };
-	public static int ROTATION_SPEED = 30;
+	public static int ROTATION_SPEED = 60;
 	
 	/**
 	 * @param {int} US_MAX - max reading of ultrasonic sensor; used to assume no object is in front of the robot
 	 * @param {double} ANGLE_CORR_LOW, ANGLE_CORR_HI - parameters for correcting robot rotation wrap-around
-	 * @param {int}	NOISE_MARGIN - margin for errors caused by noise in US readings
 	 */	
 	
 	public static int US_MAX = 40;
 	public static double ANGLE_CORR_LOW = 45, ANGLE_CORR_HI = 235;
-	public static int NOISE_MARGIN = 1;
+	private final int measuredDistance = 30;
 	public final double	us_SensorDistanceFromOrigin = 4.0;
-	private static int measuredDistance = 35;
-	//TODO: test ANGLE_CORR_LOW, ANGLE_CORR_HI, NOISE_MARGIN; change if required; also modify US_MAX if needed
+	//TODO: test ANGLE_CORR_LOW, ANGLE_CORR_HI, change if required; also modify US_MAX if needed
 	//TODO: account for distance of US sensor from the origin point of the robot
 	
 	private Odometer odo;
@@ -46,145 +44,164 @@ public class USLocalizer {
 	 */
 	
 	public void doLocalization() {
+		double angleA, angleB, angleCorrection, turnAngle;
+		
 		if (locType == LocalizationType.FALLING_EDGE) {
-			fallingEdge();
-		} 
-		else if (locType == LocalizationType.RISING_EDGE){
-			risingEdge();
-		}
-		else{
-			throw new Error("Invalid localization type selected");
-		}
-	}
-	
-	/* 
-	 * fallingEdge(): to be called when starting with US facing away from a wall
-	 * rotates till wall is found, sets this as angleA, reverses direction till
-	 * wall is found, sets this as angleB. finally, turns towards the true (0, 0)
-	 */
-	private void fallingEdge(){ 
-		double angleA, angleB, angleTemp1, angleTemp2;
-		
-		rotateWhile(4, US_MAX, false, ROTATION_SPEED); //rotate till no longer facing a wall
-		
-		rotateWhile(4, measuredDistance + NOISE_MARGIN, true, ROTATION_SPEED);  //rotate to beginning of noise margin
-		angleTemp1 = odo.getTheta();							   				//robot has entered the noise margin, get first temp angle
-		rotateWhile(4, measuredDistance - NOISE_MARGIN, true, ROTATION_SPEED); 	//rotate until robot has exited noise margin
-		angleTemp2 = odo.getTheta();                             				//get second temp angle 
-		
-		angleA = (angleTemp1 + angleTemp2)/2;                    				//calculate first falling edge 
-		
-		rotateWhile(4, measuredDistance + NOISE_MARGIN, false, -ROTATION_SPEED);//rotate other way out of noise margin
-		
-		rotateWhile(4, measuredDistance + NOISE_MARGIN, true, -ROTATION_SPEED); //rotate until the robot reaches the noise margin
-		angleTemp1 = odo.getTheta();                           					//robot has reached the noise margin, take first temp angle 
-		rotateWhile(5, measuredDistance - NOISE_MARGIN, true, -ROTATION_SPEED); //rotate until exit noise margin, record second temp angle
-		angleTemp2 = odo.getTheta();
-		
-		angleB = (angleTemp1 + angleTemp2)/2;                 					//calculate second falling edge 
-		
-		turnActualZero(angleA, angleB);                      					//turn to correct zero positioning 
-		
-		odo.reset();
-	}
-	
-	/* 
-	 * risingEdge(): to be called when starting with US facing towards a wall
-	 * rotates till end of wall is found, sets this as angleB, reverses direction 
-	 * till other end of wall is found, sets this as angleA. finally, turns towards
-	 * true (0, 0)
-	 */
-	
-	private void risingEdge(){
-		double angleA, angleB, angleTemp1, angleTemp2;
-		
-		rotateWhile(4, US_MAX, true, ROTATION_SPEED);
-		
-		rotateWhile(4, measuredDistance - NOISE_MARGIN, false, ROTATION_SPEED);
-		angleTemp1 = odo.getTheta();
-		rotateWhile(4, measuredDistance + NOISE_MARGIN, false, ROTATION_SPEED);
-		angleTemp2 = odo.getTheta();
-		
-		angleA = (angleTemp1 + angleTemp2)/2;
-		
-		rotateWhile(4, measuredDistance - NOISE_MARGIN, true, -ROTATION_SPEED);
-		
-		rotateWhile(4, measuredDistance - NOISE_MARGIN, false, -ROTATION_SPEED);
-		angleTemp1= odo.getTheta();
-		rotateWhile(4, measuredDistance + NOISE_MARGIN, false, -ROTATION_SPEED);
-		angleTemp2 = odo.getTheta();
-		
-		angleB = (angleTemp1 + angleTemp2)/2;
-	
-		turnActualZero(angleA, angleB);
-		
-		odo.reset();
-	}
-	
-	/*	
-	 * Turns to the heading calculated to be the actual 0 position 
-	 * of the grid the robot is on, accounting for the heading 
-	 * wrap-around correction angle.	
-	 */
-	private void turnActualZero(double angleA, double angleB){ 
-		if(!(angleA>0 || angleA <= 0)) Sound.beep();
-		if(!(angleB>0 || angleB <= 0)) Sound.buzz();
-		if(angleA <= angleB){
-			nav.turnTo(ANGLE_CORR_LOW - (angleA + angleB)/2, true);
-		}
-		else if(angleA >= angleB) {
-			nav.turnTo(ANGLE_CORR_HI - (angleA + angleB)/2, true);
-		}
-		else{
-			throw new Error("Actual zero calculation error.");	
-		}
-	}
-	
-	/**	@return - filtered data */
-	private float getFilteredData(int sampleSize){
-
-		float sampleData[] = new float[sampleSize];
-
-		for(int index = 0 ; index < sampleData.length; index++)
-		{
-			usSensor.fetchSample(usData, 0);
-
-			if(usData[0]*100 > US_MAX)
-				usData[0] = US_MAX;
-
-			sampleData[index] = usData[0]*100;
-			try {
-				Thread.sleep(5);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			
+			// rotate the robot until it sees no wall
+			nav.rotate(-ROTATION_SPEED);
+			
+			while(true){
+				if((int)getFilteredData() > 30){
+					break;
+				}
 			}
-		}
-		Arrays.sort(sampleData);
-		return sampleData[(int) Math.floor(sampleData.length/2)];
-	}
-	/**
-	 * @param filterSampleSize - size of filter to be used for while loop
-	 * @param toCompare - the value to be compared with getFilteredData(filterSampleSize)
-	 * @param greaterOrLess - compare greater than or less than? true = >=, false = <
-	 * @param rotateSpeed - speed of rotation; can be positive or negative
-	 * 
-	 * rotateWhile() - Compares the filter result with the value in @param toCompare using the sign indicated by @param greaterOrLess. While true continues to rotate at @param rotateSpeed.
-	 */
-	private void rotateWhile(int filterSampleSize, int toCompare, boolean greaterOrLess, int rotateSpeed){
-		if(greaterOrLess == true){
-			while(getFilteredData(filterSampleSize) >= toCompare){
-				nav.rotate(rotateSpeed);
+			
+			// keep rotating until the robot sees a wall, then calcuate the angle
+			
+			while(true){
+				if((int)getFilteredData() < measuredDistance){
+					Sound.beep();
+					angleA = odo.getTheta();
+					nav.setSpeeds(0, 0);
+					break;
+				}
 			}
-		}
-		else if (greaterOrLess == false){
-			while(getFilteredData(filterSampleSize) < toCompare){
-				nav.rotate(rotateSpeed);
+			
+			// switch direction and wait until it sees no wall
+			
+			nav.rotate(ROTATION_SPEED);
+			
+			while(true){
+				if((int)getFilteredData() > measuredDistance){
+					break;
+				}
 			}
-		}
-		else{
-			throw new Error("Invalid value for greaterOrLess in rotateWhile method.");
+			
+			// keep rotating until the robot sees a wall, then calculate the angle
+			
+			while(true){
+				if((int)getFilteredData() < 30){
+					Sound.beep();
+					angleB = odo.getTheta();
+					nav.setSpeeds(0, 0);
+					break;
+				}
+			}
+			
+			if(angleA > angleB){
+				angleCorrection = 225 - (angleA + angleB) / 2;
+			}
+			else{
+				angleCorrection = 45 - (angleA + angleB) / 2;
+			}
+			
+			// wrap angle to positive value
+			if(angleCorrection < 0) angleCorrection += 360;
+			
+			// angleA is clockwise from angleB, so assume the average of the
+			// angles to the right of angleB is 45 degrees past 'north'
+			
+			// update the odometer position (example to follow:)
+			odo.setPosition(new double [] {0.0, 0.0, angleCorrection}, new boolean [] {true, true, true});
+			
+			// adjust angle
+			turnAngle = angleCorrection + 60;
+			
+			// wrap angle to less than 360
+			if(turnAngle > 360) turnAngle -= 360;
+			
+			// rotate
+			if(turnAngle < 0) nav.turnTo(turnAngle + 360, true);
+			else nav.turnTo(turnAngle, true);
+			
+			odo.setPosition(new double [] {0.0, 0.0, 0.0}, new boolean [] {true, true, true}); 		//reset odometer after calibration 
+		} else {
+			/*
+			 * The robot should turn until it sees the wall, then look for the
+			 * "rising edges:" the points where it no longer sees the wall.
+			 * This is very similar to the FALLING_EDGE routine, but the robot
+			 * will face toward the wall for most of it.
+			 */
+			// rotate the robot until it sees no wall
+						nav.rotate(-ROTATION_SPEED);
+						
+						while(true){
+							if((int)getFilteredData() < measuredDistance){
+								break;
+							}
+						}
+						
+						// keep rotating until the robot sees a wall, then latch the angle
+						
+						while(true){
+							if((int)getFilteredData() > measuredDistance){
+								Sound.beep();
+								angleA = odo.getTheta();
+								nav.setSpeeds(0, 0);
+								break;
+							}
+						}
+						
+						// switch direction and wait until it sees no wall
+						
+						nav.rotate(ROTATION_SPEED);
+						
+						while(true){
+							if((int)getFilteredData() < measuredDistance){
+								break;
+							}
+						}
+						
+						// keep rotating until the robot sees a wall, then latch the angle
+						
+						while(true){
+							if((int)getFilteredData() > measuredDistance){
+								Sound.beep();
+								angleB = odo.getTheta();
+								nav.setSpeeds(0, 0);
+								break;
+							}
+						}
+						
+						if(angleA > angleB){
+							angleCorrection = 225 - (angleA + angleB) / 2;
+						}
+						else{
+							angleCorrection = 45 - (angleA + angleB) / 2;
+						}
+						
+						// wrap angle to positive value
+						if(angleCorrection < 0) angleCorrection += 360;
+						
+						// angleA is clockwise from angleB, so assume the average of the
+						// angles to the right of angleB is 45 degrees past 'north'
+						
+						// update the odometer position (example to follow:)
+						odo.setPosition(new double [] {0.0, 0.0, angleCorrection}, new boolean [] {true, true, true});
+						
+						// adjust angle
+						turnAngle = angleCorrection + 60;
+						
+						// wrap angle to less than 360
+						if(turnAngle > 360) turnAngle -= 360;
+						
+						// rotate
+						if(turnAngle < 0) nav.turnTo(turnAngle + 360, true);
+						else nav.turnTo(turnAngle, true);
+						
+						odo.setPosition(new double [] {0.0, 0.0, 0.0}, new boolean [] {true, true, true}); 		//reset odometer after calibration 
+					
 		}
 	}
 	
+	private float getFilteredData() {
+		usSensor.fetchSample(usData, 0);
+		float distance = usData[0];
+		distance *= 100;
+		if(distance > 255) distance = 255;
+		
+		return distance;
+	}
 }
 
