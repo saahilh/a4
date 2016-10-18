@@ -60,11 +60,12 @@ public class LightLocalizer {
 			nav.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
 		}
 		Sound.beep();
+		stop();
 		odo.setPosition(new double [] {-LS_DIST,-1,-1}, new boolean[] {true,false,false});
 		nav.travelTo(-LS_DIST/2, 0, FORWARD_SPEED);
 		nav.rotate(-ROTATION_SPEED);
 		nav.turnTo(90, true);
-		odo.setPosition(new double [] {-LS_DIST/2,0,90}, new boolean[] {true,true,true});
+		odo.setPosition(new double [] {-LS_DIST/2,0,90}, new boolean[] {true,false,true});
 		
 		while(!blackLineDetected()){
 			nav.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
@@ -72,10 +73,10 @@ public class LightLocalizer {
 		Sound.beep();
 		
 		stop();
-		odo.setPosition(new double [] {-LS_DIST,-LS_DIST,-1}, new boolean[] {true,true,false});
-		nav.travelTo(-LS_DIST, -LS_DIST/2, FORWARD_SPEED);
+		odo.setPosition(new double [] {-LS_DIST/2,-LS_DIST,-1}, new boolean[] {true,true,false});
+		nav.travelTo(-LS_DIST/2, -LS_DIST/2, FORWARD_SPEED);
 		nav.turnTo(180, true);
-		odo.setPosition(new double [] {-1,-LS_DIST/2,180}, new boolean[] {false,true,true});
+		odo.setPosition(new double [] {-LS_DIST/2,-LS_DIST/2,180}, new boolean[] {true,true,true});
 	}
 
 	/*	finds all the black lines and stores in the array blackLines[]	*/
@@ -101,8 +102,8 @@ public class LightLocalizer {
 		double thetaX = blackLines[2] - blackLines[0];
 		double thetaY = blackLines[3] - blackLines[1];
 		
-		double trueX = (-LS_DIST) * Math.cos(thetaX/2);
-		double trueY = (-LS_DIST) * Math.cos(thetaY/2);
+		double trueX = (-LS_DIST/2) * Math.cos(thetaX/2);
+		double trueY = (-LS_DIST/2) * Math.cos(thetaY/2);
 		
 		odo.setPosition(new double[]{trueX, trueY, -1}, new boolean[]{true, true, false} );
 	}
