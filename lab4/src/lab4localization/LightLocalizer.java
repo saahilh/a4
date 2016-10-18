@@ -7,7 +7,7 @@ public class LightLocalizer {
 	private Odometer odo;
 	private SampleProvider colorSensor;
 	private float[] colorData;
-	private final double LS_DIST = 8.5;
+	private final double LS_DIST = 8.0;
 	private final int ROTATION_SPEED = 35;
 	private final int FORWARD_SPEED = 45;
 	private final int lineDetectionValue = 40;
