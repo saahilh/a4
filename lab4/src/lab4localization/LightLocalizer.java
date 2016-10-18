@@ -8,8 +8,8 @@ public class LightLocalizer {
 	private SampleProvider colorSensor;
 	private float[] colorData;
 	private final double LS_DIST = 8.0;
-	private final int ROTATION_SPEED = 35;
-	private final int FORWARD_SPEED = 45;
+	private final int ROTATION_SPEED = 60;
+	private final int FORWARD_SPEED = 55;
 	private final int lineDetectionValue = 40;
 	private final double tileSize = 30.48;
 	private Navigation nav;
@@ -36,7 +36,7 @@ public class LightLocalizer {
 		//calculate actual position and correct odometer values
 		calculateTruePosition();
 		
-		nav.travelTo(0, 0, FORWARD_SPEED); //travel to the real 0,0 as the robot now knows its true position
+		nav.travelTo(0.0, 0.0, FORWARD_SPEED); //travel to the real 0,0 as the robot now knows its true position
 		
 		nav.turnTo(0, true); //turn to 0 degrees
 		
@@ -61,11 +61,10 @@ public class LightLocalizer {
 		}
 		Sound.beep();
 		stop();
-		odo.setPosition(new double [] {-LS_DIST,-1,-1}, new boolean[] {true,false,false});
+		odo.setPosition(new double [] {-LS_DIST,0,0}, new boolean[] {true,true,true});
 		nav.travelTo(-LS_DIST/2, 0, FORWARD_SPEED);
-		nav.rotate(-ROTATION_SPEED);
-		nav.turnTo(90, true);
-		odo.setPosition(new double [] {-LS_DIST/2,0,90}, new boolean[] {true,false,true});
+		nav.turnTo(95, true);
+		odo.setPosition(new double [] {-LS_DIST/2,0,90}, new boolean[] {true,true,true});
 		
 		while(!blackLineDetected()){
 			nav.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
@@ -73,9 +72,9 @@ public class LightLocalizer {
 		Sound.beep();
 		
 		stop();
-		odo.setPosition(new double [] {-LS_DIST/2,-LS_DIST,-1}, new boolean[] {true,true,false});
+		odo.setPosition(new double [] {-LS_DIST/2,-LS_DIST,90}, new boolean[] {true,true,true});
 		nav.travelTo(-LS_DIST/2, -LS_DIST/2, FORWARD_SPEED);
-		nav.turnTo(180, true);
+		nav.turnTo(185, true);
 		odo.setPosition(new double [] {-LS_DIST/2,-LS_DIST/2,180}, new boolean[] {true,true,true});
 	}
 
@@ -102,8 +101,8 @@ public class LightLocalizer {
 		double thetaX = blackLines[2] - blackLines[0];
 		double thetaY = blackLines[3] - blackLines[1];
 		
-		double trueX = (-LS_DIST/2) * Math.cos(thetaX/2);
-		double trueY = (-LS_DIST/2) * Math.cos(thetaY/2);
+		double trueX = (-LS_DIST) * Math.abs(Math.cos(thetaX/2));
+		double trueY = (-LS_DIST) * Math.abs(Math.cos(thetaY/2));
 		
 		odo.setPosition(new double[]{trueX, trueY, -1}, new boolean[]{true, true, false} );
 	}
